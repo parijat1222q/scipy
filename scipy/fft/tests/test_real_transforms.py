@@ -235,6 +235,35 @@ def test_orthogonalize_dcst3(func, norm, xp):
     xp_assert_close(y1, y2)
 
 
+@pytest.mark.parametrize("func", [dct, idct, dst, idst])
+@pytest.mark.parametrize("type", [1, 2, 3, 4])
+@pytest.mark.parametrize("orthogonalize", [True, False])
+def test_complex_orthogonalize_1d(func, type, orthogonalize):
+    # Complex input must equal the separable transform of its real and
+    # imaginary parts, for both orthogonalize settings (gh-26741).
+    rng = np.random.default_rng(1234)
+    a = rng.standard_normal(16)
+    b = rng.standard_normal(16)
+    kw = dict(type=type, norm="ortho", orthogonalize=orthogonalize)
+    z = func(a + 1j * b, **kw)
+    ref = func(a, **kw) + 1j * func(b, **kw)
+    xp_assert_close(z, ref)
+
+
+@pytest.mark.parametrize("func", [dctn, idctn, dstn, idstn])
+@pytest.mark.parametrize("type", [1, 2, 3, 4])
+@pytest.mark.parametrize("orthogonalize", [True, False])
+def test_complex_orthogonalize_nd(func, type, orthogonalize):
+    # N-D analogue of test_complex_orthogonalize_1d (gh-26741).
+    rng = np.random.default_rng(4321)
+    a = rng.standard_normal((8, 6))
+    b = rng.standard_normal((8, 6))
+    kw = dict(type=type, norm="ortho", orthogonalize=orthogonalize)
+    z = func(a + 1j * b, **kw)
+    ref = func(a, **kw) + 1j * func(b, **kw)
+    xp_assert_close(z, ref)
+
+
 @pytest.mark.parametrize("func", [dct, idct, dctn, idctn, dst, idst, dstn, idstn])
 def test_array_like(func):
     x = [[[1.0, 1.0], [1.0, 1.0]],
